@@ -1,0 +1,68 @@
+﻿<!--
+    Copyright Dale Ghent <daleg@elemental.org>
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/-->
+<ResourceDictionary
+    x:Class="DaleGhent.NINA.DeviceActionsCommands.SendCommandInstructionTemplate"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:DaleGhent.NINA.DeviceActionsCommands"
+    xmlns:mini="clr-namespace:NINA.View.Sequencer.MiniSequencer;assembly=NINA.Sequencer"
+    xmlns:nina="clr-namespace:NINA.View.Sequencer;assembly=NINA.Sequencer"
+    xmlns:ninactrl="clr-namespace:NINACustomControlLibrary;assembly=NINACustomControlLibrary"
+    xmlns:ns="clr-namespace:NINA.Core.Locale;assembly=NINA.Core"
+    xmlns:rules="clr-namespace:NINA.Core.Utility.ValidationRules;assembly=NINA.Core"
+    xmlns:util="clr-namespace:NINA.Core.Utility;assembly=NINA.Core">
+
+    <GeometryGroup x:Key="CommandPromptSVG">
+        <PathGeometry FillRule="Nonzero" Figures="M43.860736,83.510441L50.362335,88.979886 43.860736,94.458979 42.365562,92.934865 47.140475,88.999179 42.365562,85.034554z" />
+        <PathGeometry FillRule="Nonzero" Figures="M50.113298,98.192092L50.113298,96.330359 60.97502,96.330359 60.97502,98.192092z" />
+    </GeometryGroup>
+
+    <DataTemplate DataType="{x:Type local:SendCommandInstruction}">
+        <nina:SequenceBlockView>
+            <nina:SequenceBlockView.SequenceItemContent>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="{ns:Loc LblDevice}" />
+                    <ComboBox
+                        Margin="5,0,0,0"
+                        MinWidth="100"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding DeviceTypes}"
+                        SelectedItem="{Binding DeviceType}" />
+
+                    <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Text="{ns:Loc LblType}" />
+                    <ComboBox
+                        Margin="5,0,0,0"
+                        MinWidth="100"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding SendCommandTypes}"
+                        SelectedItem="{Binding SendCommandType}" />
+
+                    <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Text="{ns:Loc LblCommand}" />
+                    <TextBox
+                        MinWidth="150"
+                        Margin="5,0,0,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        Text="{Binding Command}"
+                        TextAlignment="Left" />
+
+                    <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Text="{ns:Loc LblRaw}" />
+                    <CheckBox
+                        Margin="5,0,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding Raw}" />
+                </StackPanel>
+            </nina:SequenceBlockView.SequenceItemContent>
+        </nina:SequenceBlockView>
+    </DataTemplate>
+
+    <DataTemplate x:Key="DaleGhent.NINA.DeviceActionsCommands.DeviceActionInstruction.DeviceActionInstruction_Mini">
+        <mini:MiniSequenceItem>
+        </mini:MiniSequenceItem>
+    </DataTemplate>
+</ResourceDictionary>
