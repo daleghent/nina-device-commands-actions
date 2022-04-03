@@ -4,3 +4,4 @@
 * Initial Release
 * Added **Device Action** instruction
 * Added **Send Command** instruction
+* Added tabbed Imaging screen **Device Actions and Commands** anchorable window

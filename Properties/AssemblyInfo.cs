@@ -30,7 +30,7 @@ using System.Runtime.InteropServices;
 // The url to the license
 [assembly: AssemblyMetadata("LicenseURL", "https://www.mozilla.org/en-US/MPL/2.0/")]
 // The repository where your pluggin is hosted
-[assembly: AssemblyMetadata("Repository", "https://github.com/daleghentnina-device-commands-actions")]
+[assembly: AssemblyMetadata("Repository", "https://github.com/daleghent/nina-device-commands-actions")]
 
 // The following attributes are optional for the official manifest meta data
 
@@ -52,7 +52,7 @@ using System.Runtime.InteropServices;
 //[Optional] An in-depth description of your plugin
 [assembly: AssemblyMetadata("LongDescription", @"# Device Actions and Commands
 
-This plugin provides Advanced Sequencer instructions to access any [Actions, Blind, Boolean, and String commands](https://ascom-standards.org/platform65rchelp/html/Methods_T_ASCOM_DriverAccess_AscomDriver.htm) that might be implemented in an ASCOM device driver. Any such actions and commands are generally for specific, advanced purposes and are **absolutely not** intended for general or casual use. Please consult with your driver's vendor regarding the proper use and use cases for these entities. This plugin merely provides handy access to these special and highly particular driver facilities.
+This plugin provides Advanced Sequencer instructions and an Imaging screen window to access any [Actions, Blind, Boolean, and String commands](https://ascom-standards.org/platform65rchelp/html/Methods_T_ASCOM_DriverAccess_AscomDriver.htm) that might be implemented in an ASCOM device driver. Any such actions and commands are generally for specific, advanced purposes and are **absolutely not** intended for general or casual use. Please consult with your driver's vendor regarding the proper use and use cases for these entities. This plugin merely provides handy access to these special and highly particular driver facilities.
 
 ## Returned data
 
