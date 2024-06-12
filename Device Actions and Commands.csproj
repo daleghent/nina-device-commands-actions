@@ -19,12 +19,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NINA.Plugin">
-      <Version>3.0.0.1001-nightly</Version>
+      <Version>3.1.0.9001</Version>
     </PackageReference>
-    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.355802">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.0" />
   </ItemGroup>
   <PropertyGroup />
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
