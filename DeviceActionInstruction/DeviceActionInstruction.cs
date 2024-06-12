@@ -250,7 +250,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
         }
 
         public override string ToString() {
-            return $"Category: {Category}, Item: {nameof(DeviceActionInstruction)}, Device Type: {deviceType}, Action: {supportedActions[actionName]}, ActionParameters: {actionParameters}";
+            return $"Category: {Category}, Item: {Name}, Device Type: {deviceType}, Action: {supportedActions[actionName]}, ActionParameters: {actionParameters}";
         }
 
         private IList<string> UpdateSupportedActions() {
