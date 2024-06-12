@@ -143,55 +143,20 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             try {
                 string output = string.Empty;
 
-                switch (deviceType) {
-                    case DeviceTypeEnum.CAMERA:
-                        output = cameraMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.DOME:
-                        output = domeMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.FILTERWHEEL:
-                        output = filterWheelMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.FLATDEVICE:
-                        output = flatDeviceMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.FOCUSER:
-                        output = focuserMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.GUIDER:
-                        output = guiderMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.ROTATOR:
-                        output = rotatorMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.SAFETYMONITOR:
-                        output = safetyMonitorMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.SWITCH:
-                        output = switchMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.TELESCOPE:
-                        output = telescopeMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    case DeviceTypeEnum.WEATHERDATA:
-                        output = weatherDataMediator.Action(supportedActions[actionName], actionParameters);
-                        break;
-
-                    default:
-                        throw new SequenceEntityFailedException("Unknown device type");
-                }
-
+                output = deviceType switch {
+                    DeviceTypeEnum.CAMERA => cameraMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.DOME => domeMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.FILTERWHEEL => filterWheelMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.FLATDEVICE => flatDeviceMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.FOCUSER => focuserMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.GUIDER => guiderMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.ROTATOR => rotatorMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.SAFETYMONITOR => safetyMonitorMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.SWITCH => switchMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.TELESCOPE => telescopeMediator.Action(supportedActions[actionName], actionParameters),
+                    DeviceTypeEnum.WEATHERDATA => weatherDataMediator.Action(supportedActions[actionName], actionParameters),
+                    _ => throw new SequenceEntityFailedException("Unknown device type"),
+                };
                 Logger.Info($"{deviceType} Action {supportedActions[actionName]}({actionParameters}) returned: {output}");
             } catch (Exception ex) {
                 Logger.Error($"{deviceType} Action {supportedActions[actionName]}({actionParameters}) failed: {ex.Message}");
@@ -289,42 +254,20 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
         }
 
         private IList<string> UpdateSupportedActions() {
-            switch (deviceType) {
-                case DeviceTypeEnum.CAMERA:
-                    return cameraMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.DOME:
-                    return domeMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FILTERWHEEL:
-                    return filterWheelMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FLATDEVICE:
-                    return flatDeviceMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FOCUSER:
-                    return focuserMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.GUIDER:
-                    return guiderMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.ROTATOR:
-                    return rotatorMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.SAFETYMONITOR:
-                    return safetyMonitorMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.SWITCH:
-                    return switchMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.TELESCOPE:
-                    return telescopeMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.WEATHERDATA:
-                    return weatherDataMediator.GetInfo().SupportedActions;
-            }
-
-            return new List<string>();
+            return deviceType switch {
+                DeviceTypeEnum.CAMERA => cameraMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.DOME => domeMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.FILTERWHEEL => filterWheelMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.FLATDEVICE => flatDeviceMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.FOCUSER => focuserMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.GUIDER => guiderMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.ROTATOR => rotatorMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.SAFETYMONITOR => safetyMonitorMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.SWITCH => switchMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.TELESCOPE => telescopeMediator.GetInfo().SupportedActions,
+                DeviceTypeEnum.WEATHERDATA => weatherDataMediator.GetInfo().SupportedActions,
+                _ => new List<string>(),
+            };
         }
     }
 }
