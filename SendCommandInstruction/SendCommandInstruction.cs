@@ -19,6 +19,7 @@ using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
@@ -78,16 +79,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             };
         }
 
-        private IList<string> issues = new List<string>();
-
-        public IList<string> Issues {
-            get => issues;
-            set {
-                issues = value;
-                RaisePropertyChanged();
-            }
-        }
-
         private string command = string.Empty;
 
         [JsonProperty]
@@ -142,6 +133,8 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
         public SendCommandTypeEnum[] SendCommandTypes => Enum.GetValues(typeof(SendCommandTypeEnum))
             .Cast<SendCommandTypeEnum>().ToArray();
+
+        public IList<string> Issues { get; set; } = new ObservableCollection<string>();
 
         public override Task Execute(IProgress<ApplicationStatus> progress, CancellationToken token) {
             try {
@@ -374,6 +367,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
             if (string.IsNullOrEmpty(command) || string.IsNullOrWhiteSpace(command)) {
                 i.Add("No command has been provided");
+                goto end;
             }
 
             switch (deviceType) {
@@ -444,7 +438,12 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                     break;
             }
 
-            Issues = i;
+        end:
+            if (i != Issues) {
+                Issues = i;
+                RaisePropertyChanged(nameof(Issues));
+            }
+
             return i.Count == 0;
         }
 
