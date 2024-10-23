@@ -26,8 +26,8 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
     [Export(typeof(IPluginManifest))]
     public class DeviceActionsCommands : PluginBase, INotifyPropertyChanged {
-        private IPluginOptionsAccessor pluginSettings;
-        private IProfileService profileService;
+        private readonly IPluginOptionsAccessor pluginSettings;
+        private readonly IProfileService profileService;
 
         [ImportingConstructor]
         public DeviceActionsCommands(IProfileService profileService) {
