@@ -23,6 +23,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DaleGhent.NINA.DeviceActionsCommands {
 
@@ -131,6 +132,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
         private IList<string> supportedActions = new List<string>();
 
+        [JsonProperty]
         public IList<string> SupportedActions {
             get => supportedActions;
             set {
@@ -254,7 +256,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
         }
 
         private IList<string> UpdateSupportedActions() {
-            return deviceType switch {
+            IList<string> actions = deviceType switch {
                 DeviceTypeEnum.CAMERA => cameraMediator.GetInfo().SupportedActions,
                 DeviceTypeEnum.DOME => domeMediator.GetInfo().SupportedActions,
                 DeviceTypeEnum.FILTERWHEEL => filterWheelMediator.GetInfo().SupportedActions,
@@ -268,6 +270,12 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                 DeviceTypeEnum.WEATHERDATA => weatherDataMediator.GetInfo().SupportedActions,
                 _ => new List<string>(),
             };
+            // If the device is not connected or no actions are available, use the actions loaded from the JSON template
+            if (actions == null || actions.Count == 0) {
+                actions = SupportedActions;
+            }
+
+            return actions ?? new List<string>();
         }
     }
 }
