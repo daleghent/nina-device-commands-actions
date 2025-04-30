@@ -33,18 +33,18 @@
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="{ns:Loc LblAction}" />
                                     <ComboBox
                                         Margin="5,0,0,0"
                                         MinWidth="100"
                                         VerticalAlignment="Center"
-                                        ItemsSource="{Binding SupportedActions}"
-                                        SelectedIndex="{Binding ActionName}" />
+                                        ItemsSource="{Binding SupportedActions, Mode=OneWay}"
+                                        SelectedItem="{Binding ActionName, Mode=TwoWay}" />
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="{ns:Loc LblParameters}" />
                                     <TextBox
                                         MinWidth="150"
@@ -56,7 +56,7 @@
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding ActionDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="Output" />
                                     <TextBox
                                         MinWidth="150"
@@ -71,10 +71,10 @@
                                 </UniformGrid>
                             </Border>
 
-                            <Grid IsEnabled="{Binding ActionDeviceStatus}">
+                            <Grid IsEnabled="{Binding ActionDeviceConnected}">
                                 <Button
                                     Width="100"
-                                    Command="{Binding RunActionCommand}">
+                                    Command="{Binding DoRunActionCommand}">
                                     <TextBlock
                                         Padding="5,0,5,0"
                                         Foreground="{StaticResource ButtonForegroundBrush}"
@@ -102,7 +102,7 @@
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="{ns:Loc LblType}" />
                                     <ComboBox
                                         Margin="5,0,0,0"
@@ -113,7 +113,7 @@
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="{ns:Loc LblCommand}" />
                                     <TextBox
                                         MinWidth="150"
@@ -125,7 +125,7 @@
                                 </UniformGrid>
                             </Border>
                             <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0" Margin="0,0,0,10">
-                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceStatus}">
+                                <UniformGrid VerticalAlignment="Center" Columns="2" IsEnabled="{Binding SendCommandDeviceConnected}">
                                     <TextBlock VerticalAlignment="Center" Text="Output" />
                                     <TextBox
                                         MinWidth="150"
@@ -140,10 +140,10 @@
                                 </UniformGrid>
                             </Border>
 
-                            <Grid IsEnabled="{Binding SendCommandDeviceStatus}">
+                            <Grid IsEnabled="{Binding SendCommandDeviceConnected}">
                                 <Button
                                     Width="100"
-                                    Command="{Binding RunSendCommand}">
+                                    Command="{Binding DoRunSendCommand}">
                                     <TextBlock
                                         Padding="5,0,5,0"
                                         Foreground="{StaticResource ButtonForegroundBrush}"

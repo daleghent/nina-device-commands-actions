@@ -127,12 +127,13 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        public DeviceTypeEnum[] DeviceTypes => Enum.GetValues(typeof(DeviceTypeEnum))
+        public static DeviceTypeEnum[] DeviceTypes => Enum.GetValues(typeof(DeviceTypeEnum))
             .Cast<DeviceTypeEnum>()
             .ToArray();
 
-        public SendCommandTypeEnum[] SendCommandTypes => Enum.GetValues(typeof(SendCommandTypeEnum))
-            .Cast<SendCommandTypeEnum>().ToArray();
+        public static SendCommandTypeEnum[] SendCommandTypes => Enum.GetValues(typeof(SendCommandTypeEnum))
+            .Cast<SendCommandTypeEnum>()
+            .ToArray();
 
         public IList<string> Issues { get; set; } = new ObservableCollection<string>();
 
@@ -452,7 +453,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
         }
 
         public override string ToString() {
-            return $"Category: {Category}, Item: {nameof(SendCommandInstruction)}, Device Type: {DeviceType}, SendCommand Type: {SendCommandType}, Command: {Command}, Raw: {Raw}";
+            return $"Category: {Category}, Item: {Name}, Device Type: {DeviceType}, SendCommand Type: {SendCommandType}, Command: {Command}, Raw: {Raw}";
         }
     }
 }

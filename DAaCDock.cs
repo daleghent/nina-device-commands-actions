@@ -9,6 +9,7 @@
 
 #endregion "copyright"
 
+using CommunityToolkit.Mvvm.Input;
 using NINA.Core.Enum;
 using NINA.Core.Utility;
 using NINA.Core.Utility.Notification;
@@ -20,13 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DaleGhent.NINA.DeviceActionsCommands {
 
     [Export(typeof(IDockableVM))]
-    public class DAaCDock : DockableVM {
+    public partial class DAaCDock : DockableVM, IDisposable {
         private readonly ICameraMediator cameraMediator;
         private readonly IDomeMediator domeMediator;
         private readonly IFilterWheelMediator filterWheelMediator;
@@ -38,6 +38,8 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
         private readonly ISwitchMediator switchMediator;
         private readonly ITelescopeMediator telescopeMediator;
         private readonly IWeatherDataMediator weatherDataMediator;
+
+        private const DeviceTypeEnum defaultDeviceType = DeviceTypeEnum.TELESCOPE;
 
         [ImportingConstructor]
         public DAaCDock(IProfileService profileService, ICameraMediator cameraMediator, IDomeMediator domeMediator, IFilterWheelMediator filterWheelMediator, IFlatDeviceMediator flatDeviceMediator,
@@ -55,71 +57,65 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             this.telescopeMediator = telescopeMediator;
             this.weatherDataMediator = weatherDataMediator;
 
+            cameraMediator.Connected += OnDeviceConnected;
+            cameraMediator.Disconnected += OnDeviceDisconnected;
+            domeMediator.Connected += OnDeviceConnected;
+            domeMediator.Disconnected += OnDeviceDisconnected;
+            filterWheelMediator.Connected += OnDeviceConnected;
+            filterWheelMediator.Disconnected += OnDeviceDisconnected;
+            flatDeviceMediator.Connected += OnDeviceConnected;
+            flatDeviceMediator.Disconnected += OnDeviceDisconnected;
+            focuserMediator.Connected += OnDeviceConnected;
+            focuserMediator.Disconnected += OnDeviceDisconnected;
+            guiderMediator.Connected += OnDeviceConnected;
+            guiderMediator.Disconnected += OnDeviceDisconnected;
+            rotatorMediator.Connected += OnDeviceConnected;
+            rotatorMediator.Disconnected += OnDeviceDisconnected;
+            safetyMonitorMediator.Connected += OnDeviceConnected;
+            safetyMonitorMediator.Disconnected += OnDeviceDisconnected;
+            switchMediator.Connected += OnDeviceConnected;
+            switchMediator.Disconnected += OnDeviceDisconnected;
+            telescopeMediator.Connected += OnDeviceConnected;
+            telescopeMediator.Disconnected += OnDeviceDisconnected;
+            weatherDataMediator.Connected += OnDeviceConnected;
+            weatherDataMediator.Disconnected += OnDeviceDisconnected;
+
             Title = "Device Actions and Commands";
-
-            RunActionCommand = new AsyncCommand<bool>(() => DoRunActionCommand());
-            RunSendCommand = new AsyncCommand<bool>(() => DoRunSendCommand());
-
-            UpdateSupportedActions(DeviceTypeEnum.TELESCOPE);
-            ActionDeviceStatus = GetDeviceStatus(DeviceTypeEnum.TELESCOPE);
         }
 
         public override bool IsTool => true;
 
-        private DeviceTypeEnum actionDeviceType = DeviceTypeEnum.TELESCOPE;
+        private DeviceTypeEnum actionDeviceType = defaultDeviceType;
 
-        public DeviceTypeEnum[] DeviceTypes => Enum.GetValues(typeof(DeviceTypeEnum))
+        public static DeviceTypeEnum[] DeviceTypes => Enum.GetValues(typeof(DeviceTypeEnum))
             .Cast<DeviceTypeEnum>()
             .ToArray();
 
         public bool GetDeviceStatus(DeviceTypeEnum deviceType) {
-            switch (deviceType) {
-                case DeviceTypeEnum.CAMERA:
-                    return cameraMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.DOME:
-                    return domeMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.FILTERWHEEL:
-                    return filterWheelMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.FLATDEVICE:
-                    return flatDeviceMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.FOCUSER:
-                    return focuserMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.GUIDER:
-                    return guiderMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.ROTATOR:
-                    return rotatorMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.SAFETYMONITOR:
-                    return safetyMonitorMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.SWITCH:
-                    return switchMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.TELESCOPE:
-                    return telescopeMediator.GetInfo().Connected;
-
-                case DeviceTypeEnum.WEATHERDATA:
-                    return weatherDataMediator.GetInfo().Connected;
-
-                default:
-                    return false;
-            }
+            return deviceType switch {
+                DeviceTypeEnum.CAMERA => cameraMediator.GetInfo().Connected,
+                DeviceTypeEnum.DOME => domeMediator.GetInfo().Connected,
+                DeviceTypeEnum.FILTERWHEEL => filterWheelMediator.GetInfo().Connected,
+                DeviceTypeEnum.FLATDEVICE => flatDeviceMediator.GetInfo().Connected,
+                DeviceTypeEnum.FOCUSER => focuserMediator.GetInfo().Connected,
+                DeviceTypeEnum.GUIDER => guiderMediator.GetInfo().Connected,
+                DeviceTypeEnum.ROTATOR => rotatorMediator.GetInfo().Connected,
+                DeviceTypeEnum.SAFETYMONITOR => safetyMonitorMediator.GetInfo().Connected,
+                DeviceTypeEnum.SWITCH => switchMediator.GetInfo().Connected,
+                DeviceTypeEnum.TELESCOPE => telescopeMediator.GetInfo().Connected,
+                DeviceTypeEnum.WEATHERDATA => weatherDataMediator.GetInfo().Connected,
+                _ => false,
+            };
         }
 
         #region Device Actions
 
-        private bool actionDeviceStatus = false;
+        private bool actionDeviceConnected = false;
 
-        public bool ActionDeviceStatus {
-            get => actionDeviceStatus;
+        public bool ActionDeviceConnected {
+            get => actionDeviceConnected;
             private set {
-                actionDeviceStatus = value;
+                actionDeviceConnected = value;
                 RaisePropertyChanged();
             }
         }
@@ -128,25 +124,21 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             get => actionDeviceType;
             set {
                 actionDeviceType = value;
-                ActionDeviceStatus = GetDeviceStatus(actionDeviceType);
 
-                if (ActionDeviceStatus) {
-                    SupportedActions = UpdateSupportedActions(actionDeviceType);
+                ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                SupportedActions = GetSupportedActions();
 
-                    if (SupportedActions.Any()) {
-                        ActionName = 0;
-                    }
-                } else {
-                    SupportedActions = new List<string>();
+                if (string.IsNullOrEmpty(ActionName) && SupportedActions.Any()) {
+                    ActionName = SupportedActions.First();
                 }
 
-                RaisePropertyChanged();
+                RaiseAllPropertiesChanged();
             }
         }
 
-        private IList<string> supportedActions = new List<string>();
+        private AsyncObservableCollection<string> supportedActions = [];
 
-        public IList<string> SupportedActions {
+        public AsyncObservableCollection<string> SupportedActions {
             get => supportedActions;
             set {
                 supportedActions = value;
@@ -154,9 +146,9 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        private int actionName = 0;
+        private string actionName = string.Empty;
 
-        public int ActionName {
+        public string ActionName {
             get => actionName;
             set {
                 actionName = value;
@@ -186,95 +178,55 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        private IList<string> UpdateSupportedActions(DeviceTypeEnum deviceType) {
-            switch (deviceType) {
-                case DeviceTypeEnum.CAMERA:
-                    return cameraMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.DOME:
-                    return domeMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FILTERWHEEL:
-                    return filterWheelMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FLATDEVICE:
-                    return flatDeviceMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.FOCUSER:
-                    return focuserMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.GUIDER:
-                    return guiderMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.ROTATOR:
-                    return rotatorMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.SAFETYMONITOR:
-                    return safetyMonitorMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.SWITCH:
-                    return switchMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.TELESCOPE:
-                    return telescopeMediator.GetInfo().SupportedActions;
-
-                case DeviceTypeEnum.WEATHERDATA:
-                    return weatherDataMediator.GetInfo().SupportedActions;
-            }
-
-            return new List<string>();
-        }
-
-        public IAsyncCommand RunActionCommand { get; }
-
-        private async Task<bool> DoRunActionCommand() {
+        [RelayCommand]
+        private async Task<bool> DoRunAction() {
             await Task.Run(() => {
                 string output = string.Empty;
 
                 try {
                     switch (actionDeviceType) {
                         case DeviceTypeEnum.CAMERA:
-                            output = cameraMediator.Action(supportedActions[actionName], actionParameters);
+                            output = cameraMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.DOME:
-                            output = domeMediator.Action(supportedActions[actionName], actionParameters);
+                            output = domeMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.FILTERWHEEL:
-                            output = filterWheelMediator.Action(supportedActions[actionName], actionParameters);
+                            output = filterWheelMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.FLATDEVICE:
-                            output = flatDeviceMediator.Action(supportedActions[actionName], actionParameters);
+                            output = flatDeviceMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.FOCUSER:
-                            output = focuserMediator.Action(supportedActions[actionName], actionParameters);
+                            output = focuserMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.GUIDER:
-                            output = guiderMediator.Action(supportedActions[actionName], actionParameters);
+                            output = guiderMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.ROTATOR:
-                            output = rotatorMediator.Action(supportedActions[actionName], actionParameters);
+                            output = rotatorMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.SAFETYMONITOR:
-                            output = safetyMonitorMediator.Action(supportedActions[actionName], actionParameters);
+                            output = safetyMonitorMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.SWITCH:
-                            output = switchMediator.Action(supportedActions[actionName], actionParameters);
+                            output = switchMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.TELESCOPE:
-                            output = telescopeMediator.Action(supportedActions[actionName], actionParameters);
+                            output = telescopeMediator.Action(actionName, actionParameters);
                             break;
 
                         case DeviceTypeEnum.WEATHERDATA:
-                            output = weatherDataMediator.Action(supportedActions[actionName], actionParameters);
+                            output = weatherDataMediator.Action(actionName, actionParameters);
                             break;
 
                         default:
@@ -282,9 +234,9 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                     }
 
                     ActionOutput = output;
-                    Logger.Info($"{actionDeviceType} Action {supportedActions[actionName]}({actionParameters}) returned: {output}");
+                    Logger.Info($"{actionDeviceType} Action {actionName}({actionParameters}) returned: {output}");
                 } catch (Exception ex) {
-                    Logger.Error($"{actionDeviceType} Action {supportedActions[actionName]}({actionParameters}) failed: {ex.Message}");
+                    Logger.Error($"{actionDeviceType} Action {actionName}({actionParameters}) failed: {ex.Message}");
                     Notification.ShowExternalError(ex.Message, "ASCOM driver");
                     return false;
                 }
@@ -299,12 +251,12 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
         #region SendCommand
 
-        private bool sendCommandDeviceStatus = false;
+        private bool sendCommandDeviceConnected = false;
 
-        public bool SendCommandDeviceStatus {
-            get => sendCommandDeviceStatus;
+        public bool SendCommandDeviceConnected {
+            get => sendCommandDeviceConnected;
             private set {
-                sendCommandDeviceStatus = value;
+                sendCommandDeviceConnected = value;
                 RaisePropertyChanged();
             }
         }
@@ -331,13 +283,14 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        private DeviceTypeEnum sendCommandDeviceType = DeviceTypeEnum.TELESCOPE;
+        private DeviceTypeEnum sendCommandDeviceType = defaultDeviceType;
 
         public DeviceTypeEnum SendCommandDeviceType {
             get => sendCommandDeviceType;
             set {
                 sendCommandDeviceType = value;
-                SendCommandDeviceStatus = GetDeviceStatus(sendCommandDeviceType);
+                SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+
                 RaisePropertyChanged();
             }
         }
@@ -352,7 +305,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        public SendCommandTypeEnum[] SendCommandTypes => Enum.GetValues(typeof(SendCommandTypeEnum))
+        public static SendCommandTypeEnum[] SendCommandTypes => Enum.GetValues(typeof(SendCommandTypeEnum))
             .Cast<SendCommandTypeEnum>().ToArray();
 
         private string sendCommandOutput = string.Empty;
@@ -365,9 +318,8 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             }
         }
 
-        public IAsyncCommand RunSendCommand { get; }
-
-        private async Task<bool> DoRunSendCommand() {
+        [RelayCommand]
+        private async Task<bool> DoRunSend() {
             if (string.IsNullOrEmpty(command)) { return false; }
 
             await Task.Run(() => {
@@ -601,9 +553,256 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             return true;
         }
 
+        private AsyncObservableCollection<string> GetSupportedActions() {
+            IList<string> actions = [];
+
+            switch (actionDeviceType) {
+                case DeviceTypeEnum.CAMERA:
+                    if (cameraMediator.GetInfo().Connected) {
+                        actions = cameraMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.DOME:
+                    if (domeMediator.GetInfo().Connected) {
+                        actions = domeMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.FILTERWHEEL:
+                    if (filterWheelMediator.GetInfo().Connected) {
+                        actions = filterWheelMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.FLATDEVICE:
+                    if (flatDeviceMediator.GetInfo().Connected) {
+                        actions = flatDeviceMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.FOCUSER:
+                    if (focuserMediator.GetInfo().Connected) {
+                        actions = focuserMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.GUIDER:
+                    if (guiderMediator.GetInfo().Connected) {
+                        actions = guiderMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.ROTATOR:
+                    if (rotatorMediator.GetInfo().Connected) {
+                        actions = rotatorMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.SAFETYMONITOR:
+                    if (safetyMonitorMediator.GetInfo().Connected) {
+                        actions = safetyMonitorMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.SWITCH:
+                    if (switchMediator.GetInfo().Connected) {
+                        actions = switchMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.TELESCOPE:
+                    if (telescopeMediator.GetInfo().Connected) {
+                        actions = telescopeMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+
+                case DeviceTypeEnum.WEATHERDATA:
+                    if (weatherDataMediator.GetInfo().Connected) {
+                        actions = weatherDataMediator.GetInfo().SupportedActions;
+                    }
+                    break;
+            }
+
+            // If the device is not connected or no actions are available, use the actions loaded from the JSON template
+            if (actions == null || actions.Count == 0) {
+                Logger.Debug($"No {actionDeviceType} actions available");
+                return supportedActions;
+            }
+
+            var actionsList = new AsyncObservableCollection<string>();
+            foreach (var action in actions) {
+                actionsList.Add(action);
+            }
+
+            return actionsList;
+        }
+
+
+        private Task OnDeviceConnected(object sender, EventArgs e) {
+            switch (sender) {
+                case ICameraVM:
+                    if (actionDeviceType == DeviceTypeEnum.CAMERA) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.CAMERA) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IDomeVM:
+                    if (actionDeviceType == DeviceTypeEnum.DOME) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.DOME) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IFilterWheelVM:
+                    if (actionDeviceType == DeviceTypeEnum.FILTERWHEEL) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.FILTERWHEEL) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IFlatDeviceVM:
+                    if (actionDeviceType == DeviceTypeEnum.FLATDEVICE) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.FLATDEVICE) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+                case IFocuserVM:
+                    if (actionDeviceType == DeviceTypeEnum.FOCUSER) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.FOCUSER) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IGuiderVM:
+                    if (actionDeviceType == DeviceTypeEnum.GUIDER) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.GUIDER) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IRotatorVM:
+                    if (actionDeviceType == DeviceTypeEnum.ROTATOR) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.ROTATOR) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case ISafetyMonitorVM:
+                    if (actionDeviceType == DeviceTypeEnum.SAFETYMONITOR) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.SAFETYMONITOR) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case ISwitchVM:
+                    if (actionDeviceType == DeviceTypeEnum.SWITCH) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.SWITCH) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case ITelescopeVM:
+                    if (actionDeviceType == DeviceTypeEnum.TELESCOPE) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.TELESCOPE) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+
+                case IWeatherDataVM:
+                    if (actionDeviceType == DeviceTypeEnum.WEATHERDATA) {
+                        SupportedActions = GetSupportedActions();
+                        ActionName = SupportedActions.FirstOrDefault();
+                        ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+                    }
+                    if (sendCommandDeviceType == DeviceTypeEnum.WEATHERDATA) {
+                        SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+                    }
+                    break;
+            }
+
+            RaiseAllPropertiesChanged();
+
+            return Task.CompletedTask;
+        }
+
+        private Task OnDeviceDisconnected(object sender, EventArgs e) {
+            SupportedActions = [];
+            ActionDeviceConnected = GetDeviceStatus(actionDeviceType);
+            SendCommandDeviceConnected = GetDeviceStatus(sendCommandDeviceType);
+            RaiseAllPropertiesChanged();
+
+            return Task.CompletedTask;
+        }
+
         #endregion
 
         public void Dispose() {
+            cameraMediator.Connected -= OnDeviceConnected;
+            cameraMediator.Disconnected -= OnDeviceDisconnected;
+            domeMediator.Connected -= OnDeviceConnected;
+            domeMediator.Disconnected -= OnDeviceDisconnected;
+            filterWheelMediator.Connected -= OnDeviceConnected;
+            filterWheelMediator.Disconnected -= OnDeviceDisconnected;
+            flatDeviceMediator.Connected -= OnDeviceConnected;
+            flatDeviceMediator.Disconnected -= OnDeviceDisconnected;
+            focuserMediator.Connected -= OnDeviceConnected;
+            focuserMediator.Disconnected -= OnDeviceDisconnected;
+            guiderMediator.Connected -= OnDeviceConnected;
+            guiderMediator.Disconnected -= OnDeviceDisconnected;
+            rotatorMediator.Connected -= OnDeviceConnected;
+            rotatorMediator.Disconnected -= OnDeviceDisconnected;
+            safetyMonitorMediator.Connected -= OnDeviceConnected;
+            safetyMonitorMediator.Disconnected -= OnDeviceDisconnected;
+            switchMediator.Connected -= OnDeviceConnected;
+            switchMediator.Disconnected -= OnDeviceDisconnected;
+            telescopeMediator.Connected -= OnDeviceConnected;
+            telescopeMediator.Disconnected -= OnDeviceDisconnected;
+            weatherDataMediator.Connected -= OnDeviceConnected;
+            weatherDataMediator.Disconnected -= OnDeviceDisconnected;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

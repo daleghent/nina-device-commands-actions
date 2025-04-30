@@ -37,8 +37,9 @@
                         Margin="5,0,0,0"
                         MinWidth="100"
                         VerticalAlignment="Center"
+                        IsEnabled="{Binding HasActions}"
                         ItemsSource="{Binding SupportedActions}"
-                        SelectedIndex="{Binding ActionName}" />
+                        SelectedItem="{Binding ActionName}" />
 
                     <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Text="{ns:Loc LblParameters}" />
                     <TextBox
@@ -46,8 +47,20 @@
                         Margin="5,0,0,0"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Center"
+                        IsEnabled="{Binding HasActions}"
                         Text="{Binding ActionParameters}"
                         TextAlignment="Left" />
+
+                    <Button
+                        Margin="10,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding RefreshActionsCommand}"
+                        IsEnabled="{Binding EnableRefresh}">
+                        <TextBlock
+                            Margin="5,0,5,0"
+                            VerticalAlignment="Center"
+                            Text="Refresh Actions" />
+                    </Button>
                 </StackPanel>
             </nina:SequenceBlockView.SequenceItemContent>
         </nina:SequenceBlockView>
