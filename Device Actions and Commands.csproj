@@ -25,7 +25,9 @@
       <Version>3.1.0.9001</Version>
     </PackageReference>
   </ItemGroup>
-  <PropertyGroup />
+  <PropertyGroup>
+    <AssemblyName>DaleGhent.NINA.DeviceActionsCommands</AssemblyName>
+  </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="if not exist &quot;%25localappdata%25\NINA\Plugin\3.0.0\$(MSBuildProjectName)&quot; (&#xD;&#xA;    echo &quot;Creating $(PlatformName) Plugins $(MSBuildProjectName) folder&quot;&#xD;&#xA;    mkdir  &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(MSBuildProjectName)&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;echo &quot;Copying artifacts&quot;&#xD;&#xA;xcopy &quot;$(TargetPath)&quot; &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(MSBuildProjectName)&quot; /h/i/c/k/e/r/y&#xD;&#xA;xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;%25localappdata%25\NINA\Plugins\3.0.0\$(MSBuildProjectName)&quot; /h/i/c/k/e/r/y" />
   </Target>
