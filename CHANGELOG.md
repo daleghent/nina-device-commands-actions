@@ -1,5 +1,9 @@
 ﻿# Device Actions and Commands
 
+## 2.2.0.0 - 2025-09-11
+* Fixed: Deserialization errors in some cases when it comes to loading the list of available actions that are saved in a sequence or template.
+* Updated supported actions list update methodology
+
 ## 2.1.0.0 - 2025-09-08
 * **IMPORTANT**: Breaking change: You will need to re-add any existing **Device Action** or **Send Command** instruction in your sequences or templates after updating to this version. This is due to a needed change in the underlying pluging assembly configuration. The previous existing/previous instructions will show up as Unknown after installing this version.
 * Implemented dynamic refresh and activation of actions upon device status change (connect or disconnect).
