@@ -16,6 +16,7 @@ using NINA.Core.Locale;
 using NINA.Core.Model;
 using NINA.Core.Utility;
 using NINA.Equipment.Interfaces.Mediator;
+using NINA.Equipment.Interfaces.ViewModel;
 using NINA.Sequencer.SequenceItem;
 using NINA.Sequencer.Validations;
 using System;
@@ -136,7 +137,10 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             get => deviceType;
             set {
                 deviceType = value;
-                RaiseAllPropertiesChanged();
+                SupportedActions = GetSupportedActions();
+
+                RaisePropertyChanged();
+                RaisePropertyChanged(nameof(ActionName));
                 Validate();
             }
         }
@@ -163,6 +167,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                 actionName = value;
                 Validate();
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(SupportedActions));
             }
         }
 
@@ -186,6 +191,19 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             get => supportedActions;
             set {
                 supportedActions = value;
+
+                HasActions = supportedActions.Count > 0;
+
+                if (HasActions && !supportedActions.Contains(ActionName)) {
+                    ActionName = supportedActions.First();
+                    ActionParameters = string.Empty;
+                }
+
+                if (!HasActions) {
+                    ActionName = string.Empty;
+                    ActionParameters = string.Empty;
+                }
+
                 RaisePropertyChanged();
             }
         }
@@ -246,10 +264,12 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
             return Task.CompletedTask;
         }
 
+        public override void AfterParentChanged() {
+            Validate();
+        }
+
         public bool Validate() {
             var i = new List<string>();
-
-            IList<string> actionsList = [];
             var connected = false;
 
             switch (deviceType) {
@@ -259,7 +279,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = cameraMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -269,7 +288,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = domeMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -279,7 +297,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = filterWheelMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -289,7 +306,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = flatDeviceMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -299,7 +315,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = focuserMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -309,7 +324,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = guiderMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -319,7 +333,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = rotatorMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -329,7 +342,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = safetyMonitorMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -339,7 +351,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = switchMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -349,7 +360,6 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = telescopeMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
 
@@ -359,30 +369,27 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                         goto end;
                     } else {
                         connected = true;
-                        actionsList = weatherDataMediator?.GetInfo().SupportedActions ?? [];
                     }
                     break;
             }
 
-            if (!actionsList.Contains(ActionName)) {
-                i.Add($"{ActionName} is not an available driver action");
-                goto end;
-            }
-
-            if (supportedActions == null || supportedActions.Count == 0) {
+            if (SupportedActions == null || SupportedActions.Count == 0) {
                 i.Add(Loc.Instance["LblNoActionsAvailable"]);
                 goto end;
             }
 
-            if (supportedActions.Count > 0 && string.IsNullOrEmpty(actionName)) {
-                i.Add("The action name to use is not selected");
+            if (!string.IsNullOrEmpty(ActionName)) {
+                if (!SupportedActions.Contains(ActionName)) {
+                    i.Add($"{ActionName} is not an available action in the driver");
+                    goto end;
+                }
             }
 
         end:
             Issues = i;
             var passed = i.Count == 0;
 
-            HasActions = actionsList.Count > 0;
+            HasActions = SupportedActions.Count > 0;
             EnableRefresh = connected;
 
             return passed;
@@ -486,24 +493,42 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
                 actionsList.Add(action);
             }
 
-            HasActions = actionsList.Count > 0;
-
             return actionsList;
         }
 
         [RelayCommand]
         private async Task RefreshActions(object o) {
             SupportedActions = GetSupportedActions();
-
-            if (!SupportedActions.Contains(ActionName) && SupportedActions.Any()) {
-                ActionName = SupportedActions.First();
-                ActionParameters = string.Empty;
-            }
-
             await Task.CompletedTask;
         }
 
         private Task OnDeviceConnected(object sender, EventArgs e) {
+            if (deviceType == DeviceTypeEnum.CAMERA && sender is ICameraVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.DOME && sender is IDomeVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.FILTERWHEEL && sender is IFilterWheelVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.FLATDEVICE && sender is IFlatDeviceVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.FOCUSER && sender is IFocuserVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.GUIDER && sender is IGuiderVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.ROTATOR && sender is IRotatorVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.SAFETYMONITOR && sender is ISafetyMonitorVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.SWITCH && sender is ISwitchVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.TELESCOPE && sender is ITelescopeVM) {
+                SupportedActions = GetSupportedActions();
+            } else if (deviceType == DeviceTypeEnum.WEATHERDATA && sender is IWeatherDataVM) {
+                SupportedActions = GetSupportedActions();
+            } else {
+                return Task.CompletedTask;
+            }
+
             Validate();
             return Task.CompletedTask;
         }
