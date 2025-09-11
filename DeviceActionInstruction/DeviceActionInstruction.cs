@@ -181,7 +181,7 @@ namespace DaleGhent.NINA.DeviceActionsCommands {
 
         private AsyncObservableCollection<string> supportedActions = [];
 
-        [JsonProperty]
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public AsyncObservableCollection<string> SupportedActions {
             get => supportedActions;
             set {
